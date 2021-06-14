@@ -1,0 +1,6 @@
+metadata:
+  class: File
+  path: data/thousand_genomes_meta.csv
+variants:
+  class: File
+  path: data/ALL.chr21.integrated_phase1_v3.20101123.snps_indels_svs.genotypes_subsample.vcf.gz
