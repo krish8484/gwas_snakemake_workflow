@@ -1,9 +1,10 @@
 import os
-from glob import glob
+
+samples = os.path.basename(config["variants"]["path"].split('.vcf.gz')[0])
 
 rule all:
     input:
-        png = glob("*.png")
+        png = expand("{sample}.png", sample=samples)
 
 rule parse_metadata:
     input:
@@ -16,7 +17,7 @@ rule parse_metadata:
         sex = "sex.txt",
         ids = "ids.txt",
     shell:
-        "bash parse_metadata.sh -c {input.metadata}"
+        "parse_metadata.sh -c {input.metadata}"
 
 rule run_gwas:
     input:
@@ -25,30 +26,20 @@ rule run_gwas:
         phenotypes = "phenotypes.txt",
         sex = "sex.txt",
         ids = "ids.txt",
-        SCRIPT_ = os.path.join(
-            "docker",
-            "shell_scripts",
-            "run_gwas.sh"
-        )
     singularity:
         "docker://elixircloud/plink:1.9-cwl-20200901"
     output:
-        logistic = glob("*.assoc.logistic")  
+        logistic = "{sample}.assoc.logistic" 
     shell:
-        "bash {input.SCRIPT_} {input.variants} {input.ids} {input.sex} {input.phenotypes} {input.covariates}"
+        "run_gwas.sh {input.variants} {input.ids} {input.sex} {input.phenotypes} {input.covariates}"
     
 rule create_plot:
     input:
-        logistic = glob("*.assoc.logistic"),
-        SCRIPT_ = os.path.join(
-            "docker",
-            "shell_scripts",
-            "create_plot.sh"
-        )
+        logistic = "{sample}.assoc.logistic"
     singularity:
-        "docker://elixircloud/plink:1.9-cwl-20200901"
+        "docker://krish8484/plink:1.9-20200901"
     output:
-        png = glob("*.png")
+        png = "{sample}.png"
     shell:
-        "bash {input.SCRIPT_} {input.logistic}"
+        "create_plot.sh {input.logistic}"
 
